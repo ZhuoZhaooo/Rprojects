@@ -1,0 +1,63 @@
+---
+title: "Fed R&D Research Report"
+author: "Zhuo Zhao"
+date: "April 12, 2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include = FALSE}
+rm(list = ls())
+gc()
+library(dplyr)
+library(ggplot2)
+
+fed <- read.csv("fed_r_d_spending.csv")
+``` 
+### Brief Introduction
+This report mainly focuses on the R&D data set. 
+
+### Total R&D Budget and GDP
+
+```{r echo= FALSE}
+# Create a new column summarizing the total R&D budget
+fed_summarized <- group_by(fed, year) %>%
+  summarise(total_rd = sum(rd_budget))
+
+fed_new <- left_join(fed, fed_summarized, by = 'year')
+
+# Plot the relationship between Total RD and GDP
+p <- ggplot(fed_new, aes(x = total_rd, y = gdp, color = year))
+
+p + geom_point(size = 3) + labs(x = "Total R&D Budget", color = "Year", y = "GDP") +
+  ggtitle("Total R&D Budget and GDP") + geom_smooth(method = "lm")
+
+```
+<p>The graph shows that the relationship between R&D Budget and GDP is positive, which indicates the investment in R&D may promote the growth of GDP.</p>
+<p>Also, we can see the GDP and Total R&D Budget are increasing.</p> 
+
+### R&D Budget三 in Different Departments
+<p> What are the R&D budgets in different department? Are R&D budgets increasing as time goes by?
+
+```{r echo = FALSE, warning = FALSE}
+p <- ggplot(fed_new, aes(x=year, y = rd_budget, color = department))
+sequence <- filter(fed_new, year == max(year)) %>% arrange(desc(rd_budget)) %>%
+  select(department)
+
+p + geom_point() + geom_smooth(method = 'lm') + 
+  labs(x = 'Year', y = 'R&D Budget', title = 'R&D in Different Departments',
+       color = "Departments") + 
+  scale_color_discrete(breaks = sequence[[1]]) + scale_y_log10() + xlim(1976,2018)
+
+  
+```
+As we can see, not all departments have increasing R&D budgets over time. And the Department of Defense has the highest the R&D budgets all the time. 
+
+### Discretionary Outlays and Total Outlays
+```{r echo = FALSE}
+```
