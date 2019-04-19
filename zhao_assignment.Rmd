@@ -45,7 +45,7 @@ p + geom_point(size = 3) + labs(x = "Total R&D Budget", color = "Year", y = "GDP
 <p>Also, we can see the GDP and Total R&D Budget are increasing over time.</p> 
 
 #### R&D Budgets in Different Departments
-<p> How much are the R&D budgets in different department? Are R&D budgets increasing as time goes by?
+<p> How much are the R&D budgets in different department? Are R&D budgets increasing as time goes by?<p>
 
 ```{r echo = FALSE, warning = FALSE}
 p <- ggplot(fed_new, aes(x=year, y = rd_budget, color = department))
@@ -59,7 +59,8 @@ p + geom_point() + geom_smooth(method = 'lm') +
 
   
 ```
-As we can see, not all departments have increasing R&D budgets over time. And the Department of Defense has the highest the R&D budgets all the time. 
+
+<p>As we can see, not all departments have increasing R&D budgets over time. And the Department of Defense has the highest the R&D budgets all the time.<p>
 
 #### Discretionary Outlays and Total Outlays
 ```{r echo = FALSE}
