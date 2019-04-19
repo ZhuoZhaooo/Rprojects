@@ -1,10 +1,11 @@
 ---
-title: "Fed R&D Research Report"
-author: "Zhuo Zhao"
-date: "April 12, 2019"
+title: "R Assignment Report"
+author: "Zhuo Zhao 100636803 Undergraduate Student"
+date: "April 19, 2019"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -16,13 +17,15 @@ rm(list = ls())
 gc()
 library(dplyr)
 library(ggplot2)
+library(reshape2)
 
 fed <- read.csv("fed_r_d_spending.csv")
+climate <- read.csv("climate_spending.csv")
+energy <- read.csv("energy_spending.csv")
 ``` 
-### Brief Introduction
-This report mainly focuses on the R&D data set. 
+### Fed R&D Data
 
-### Total R&D Budget and GDP
+#### Total R&D Budget and GDP
 
 ```{r echo= FALSE}
 # Create a new column summarizing the total R&D budget
@@ -39,10 +42,10 @@ p + geom_point(size = 3) + labs(x = "Total R&D Budget", color = "Year", y = "GDP
 
 ```
 <p>The graph shows that the relationship between R&D Budget and GDP is positive, which indicates the investment in R&D may promote the growth of GDP.</p>
-<p>Also, we can see the GDP and Total R&D Budget are increasing.</p> 
+<p>Also, we can see the GDP and Total R&D Budget are increasing over time.</p> 
 
-### R&D Budget三 in Different Departments
-<p> What are the R&D budgets in different department? Are R&D budgets increasing as time goes by?
+#### R&D Budgets in Different Departments
+<p> How much are the R&D budgets in different department? Are R&D budgets increasing as time goes by?
 
 ```{r echo = FALSE, warning = FALSE}
 p <- ggplot(fed_new, aes(x=year, y = rd_budget, color = department))
@@ -58,6 +61,91 @@ p + geom_point() + geom_smooth(method = 'lm') +
 ```
 As we can see, not all departments have increasing R&D budgets over time. And the Department of Defense has the highest the R&D budgets all the time. 
 
-### Discretionary Outlays and Total Outlays
+#### Discretionary Outlays and Total Outlays
 ```{r echo = FALSE}
+fed_new_sub = fed_new[,c("year", "total_outlays",
+                         "discretionary_outlays")]
+
+mask <- !duplicated(fed_new_sub)
+
+fed_new_sub <- fed_new_sub[mask,]
+
+fed_new_sub <- melt(fed_new_sub,id = c("year"))
+
+p <- ggplot(fed_new_sub, aes(x = year, y = value, 
+                             color = variable))
+p + geom_point() + geom_smooth(method = 'lm') + 
+  labs(x = "Year", y = "Value", color = "", 
+       title = "Total Outlays vs Discretionary Outlays") +
+  scale_color_discrete(labels = c("Total Outlays", "Discretionary Outlays"))
+
 ```
+<p>Generally, both total outlays and discretionary outlays are increasing over time. And the growth rate of total outlays is larger than the discretionary outlays.<p>
+
+### Climate and Energy Spendings Data
+#### GCC and Energy Spendings Summary 
+```{r, echo = FALSE}
+p <- ggplot(climate, aes(x = year, y = gcc_spending, 
+                         color = department))
+
+sequence <- filter(climate, year == max(year)) %>%
+  arrange(desc(gcc_spending)) %>% select(department)
+
+p + geom_point() + geom_smooth(method = "lm") + 
+  scale_y_log10() + 
+  labs(x = "Year",y = "GCC Spending",
+       title = "GCC Spendings Over Time", 
+       color = "Department") +
+  scale_color_discrete(breaks = sequence[[1]])
+  
+            
+```
+```{r echo= FALSE}
+p <- ggplot(energy, aes(x = year, y = energy_spending, 
+                         color = department))
+
+sequence <- filter(energy, year == max(year)) %>%
+  arrange(desc(energy_spending)) %>% select(department)
+
+p + geom_point() + geom_smooth(method = "lm") + 
+  labs(x = "Year",y = "Energy Spending",
+       title = "Energy Spendings Over Time", 
+       color = "Department") +
+  scale_color_discrete(breaks = sequence[[1]])
+```
+
+
+#### What is the relationship between climate spendings and energy Spendings?
+
+```{r echo = FALSE}
+climate_group <- group_by(climate, year) %>%
+  summarise(gcc_total = sum(gcc_spending))
+
+energy_group <- group_by(energy, year) %>% 
+  summarise(energy_total = sum(energy_spending))
+
+climate_energy <- inner_join(climate_group, energy_group, by = "year")
+
+climate_energy <- melt(climate_energy, id = 'year')
+
+p <- ggplot(climate_energy, aes(x = year, y = value, color = variable))
+
+p + geom_line() + 
+  labs(x = "Year", y = "Value", color = "", 
+       title = "Total GCC and Energy Spendings Over Time") + 
+  scale_color_discrete(labels= c("Total GCC Spendings", 
+                                 "Total Engery Spendings"))
+
+climate_energy <- dcast(climate_energy, year ~ variable)
+p <- ggplot(climate_energy, aes(x = gcc_total, y = energy_total,
+                                color = year))
+p + geom_point(size = 2) + geom_smooth(method = 'lm') + 
+  labs(x = "Total GCC Spendings", y = "Total Energy Spendings",
+       color= "Year", 
+       title = "Energy Spendings Vs GCC Spendings")
+
+
+
+```
+
+The GCC spending may have positive relationship with energy spending. But it needs hypothesis test to prove it. 
